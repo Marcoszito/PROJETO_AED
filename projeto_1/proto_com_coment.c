@@ -1,10 +1,11 @@
+//Integrantes: Marcos Vinicius Aires de Medeiros, Jos√© Bernardo da Silva
 #include "raylib.h"
 #include "stdio.h" 
 #include "stdlib.h"
 #include "math.h"
 #include "string.h"
 
-// Define as dimensıes da grade usada para renderizar a textura/mosaico de fundo
+// Define as dimens√µes da grade usada para renderizar a textura/mosaico de fundo
 #define GRID_LINHAS 10
 #define GRID_COLUNAS 10
 
@@ -15,7 +16,7 @@ typedef enum {
     ESTADO_GAMEOVER
 } EstadoJogo;
 
-// Enumerador para controlar a orientaÁ„o do sprite do sapo
+// Enumerador para controlar a orienta√ß√£o do sprite do sapo
 typedef enum {
     DIR_ESQUERDA,
     DIR_DIREITA
@@ -26,37 +27,37 @@ typedef struct {
     float x, y;
 } Ponto2D;
 
-// Estrutura que representa cada mosca colet·vel no jogo
+// Estrutura que representa cada mosca colet√°vel no jogo
 typedef struct {
-    Ponto2D pos;    // PosiÁ„o no mundo (x, y)
+    Ponto2D pos;    // Posi√ß√£o no mundo (x, y)
     Vector2 vel;    // Velocidade de movimento
-    bool ativa;     // Se a mosca ainda existe ou j· foi capturada
+    bool ativa;     // Se a mosca ainda existe ou j√° foi capturada
     Color cor;      // Cor da mosca (usada como fallback/conceito)
 } Mosca;
 
 // Estrutura do jogador (Sapo)
 typedef struct {
-    Ponto2D pos;      // PosiÁ„o atual no mapa
-    Vector2 vel;      // Velocidade atual (x para horizontal, y para fÌsica de pulo/queda)
-    bool noChao;      // Flag que indica se est· apoiado em alguma plataforma
-    Direcao direcao;  // Para onde est· olhando (usado para espelhar a textura)
+    Ponto2D pos;      // Posi√ß√£o atual no mapa
+    Vector2 vel;      // Velocidade atual (x para horizontal, y para f√≠sica de pulo/queda)
+    bool noChao;      // Flag que indica se est√° apoiado em alguma plataforma
+    Direcao direcao;  // Para onde est√° olhando (usado para espelhar a textura)
     int pontos;       // Quantidade de moscas capturadas
 } Sapo;
 
 // Estrutura para as plataformas de salto
 typedef struct {
-    Rectangle rect; // Ret‚ngulo de colis„o e renderizaÁ„o (x, y, largura, altura)
+    Rectangle rect; // Ret√¢ngulo de colis√£o e renderiza√ß√£o (x, y, largura, altura)
     Color cor;      // Cor da plataforma
 } Plataforma;
 
-// Estrutura principal que guarda todo o estado global da aplicaÁ„o
+// Estrutura principal que guarda todo o estado global da aplica√ß√£o
 typedef struct {
     Sapo sapo;                  // Dados do jogador
     
-    Mosca *moscas;              // Vetor din‚mico de moscas
+    Mosca *moscas;              // Vetor din√¢mico de moscas
     int numMoscas;              // Quantidade atual de moscas alocadas
     
-    Plataforma *plataformas;    // Vetor din‚mico de plataformas
+    Plataforma *plataformas;    // Vetor din√¢mico de plataformas
     int numPlataformas;         // Quantidade atual de plataformas alocadas
 
     EstadoJogo estado;          // Estado atual (Jogando, Game Over, etc.)
@@ -65,14 +66,14 @@ typedef struct {
     Texture2D texSapo;          // Textura carregada do sapo
     Texture2D texMosca;         // Textura carregada da mosca
 
-    float camY;                 // PosiÁ„o Y da c‚mera (deslocamento do cen·rio)
-    float altMax;               // A maior altura (menor Y) que o sapo alcanÁou
-    float yUltimaPlat;          // Coordenada Y da ˙ltima plataforma gerada no topo
+    float camY;                 // Posi√ß√£o Y da c√¢mera (deslocamento do cen√°rio)
+    float altMax;               // A maior altura (menor Y) que o sapo alcan√ßou
+    float yUltimaPlat;          // Coordenada Y da √∫ltima plataforma gerada no topo
 
-    int bgGrid[GRID_LINHAS][GRID_COLUNAS]; // Matriz para desenhar o padr„o do fundo
+    int bgGrid[GRID_LINHAS][GRID_COLUNAS]; // Matriz para desenhar o padr√£o do fundo
 } Jogo;
 
-// ProtÛtipos das FunÁıes
+// Prot√≥tipos das Fun√ß√µes
 Jogo* CriarJogo(int largura, int altura);
 void ReiniciarJogo(Jogo *jogo);
 void AtualizarJogo(Jogo *jogo);
@@ -84,16 +85,16 @@ int main(void) {
     const int larguraTela = 800;
     const int alturaTela = 600;
 
-    // Inicializa a janela gr·fica da Raylib com a dimens„o especificada
+    // Inicializa a janela gr√°fica da Raylib com a dimens√£o especificada
     InitWindow(larguraTela, alturaTela, "Jogo do Sapo - Subida Infinita");
-    SetTargetFPS(60); // Fixa a taxa de atualizaÁ„o em 60 quadros por segundo
+    SetTargetFPS(60); // Fixa a taxa de atualiza√ß√£o em 60 quadros por segundo
 
     // Aloca e inicializa a estrutura do jogo
     Jogo *jogo = CriarJogo(larguraTela, alturaTela);
 
-    // Loop principal da aplicaÁ„o (executa atÈ o usu·rio fechar a janela)
+    // Loop principal da aplica√ß√£o (executa at√© o usu√°rio fechar a janela)
     while (!WindowShouldClose()) {
-        AtualizarJogo(jogo); // Processa lÛgica, entradas e fÌsica
+        AtualizarJogo(jogo); // Processa l√≥gica, entradas e f√≠sica
 
         BeginDrawing();
         ClearBackground(RAYWHITE); // Limpa a tela a cada frame
@@ -101,14 +102,14 @@ int main(void) {
         EndDrawing();
     }
 
-    // Libera texturas, memÛrias din‚micas e encerra a janela
+    // Libera texturas, mem√≥rias din√¢micas e encerra a janela
     DestruirJogo(jogo);
     CloseWindow();
 
     return 0;
 }
 
-// Aloca a memÛria inicial e carrega recursos essenciais do disco
+// Aloca a mem√≥ria inicial e carrega recursos essenciais do disco
 Jogo* CriarJogo(int largura, int altura) {
     Jogo *jogo = (Jogo*) malloc(sizeof(Jogo));
 
@@ -118,7 +119,7 @@ Jogo* CriarJogo(int largura, int altura) {
     jogo->moscas = NULL;
     jogo->plataformas = NULL;
 
-    // Inicializa a matriz para criar um padr„o xadrez suave no fundo
+    // Inicializa a matriz para criar um padr√£o xadrez suave no fundo
     for (int l = 0; l < GRID_LINHAS; l++) {
         for (int c = 0; c < GRID_COLUNAS; c++) {
             jogo->bgGrid[l][c] = (l + c) % 2;
@@ -130,11 +131,11 @@ Jogo* CriarJogo(int largura, int altura) {
     return jogo;
 }
 
-// Reseta o estado das vari·veis para iniciar ou reiniciar uma partida
+// Reseta o estado das vari√°veis para iniciar ou reiniciar uma partida
 void ReiniciarJogo(Jogo *jogo) {
     jogo->estado = ESTADO_JOGANDO;
 
-    // PosiÁ„o inicial do sapo
+    // Posi√ß√£o inicial do sapo
     jogo->sapo.pos.x = 375.0f;
     jogo->sapo.pos.y = 400.0f;
     jogo->sapo.vel.x = 0;
@@ -143,27 +144,27 @@ void ReiniciarJogo(Jogo *jogo) {
     jogo->sapo.direcao = DIR_DIREITA;
     jogo->sapo.pontos = 0;
 
-    // Reseta a c‚mera e a altura m·xima alcanÁada
+    // Reseta a c√¢mera e a altura m√°xima alcan√ßada
     jogo->camY = 0.0f;
     jogo->altMax = jogo->sapo.pos.y;
 
     snprintf(jogo->msgStatus, sizeof(jogo->msgStatus), "Moscas Capturadas: 0");
 
-    // Libera alocaÁıes antigas se estiver reiniciando a partida
+    // Libera aloca√ß√µes antigas se estiver reiniciando a partida
     if (jogo->plataformas != NULL) free(jogo->plataformas);
     if (jogo->moscas != NULL) free(jogo->moscas);
 
-    // Cria as plataformas base do inÌcio do nÌvel
+    // Cria as plataformas base do in√≠cio do n√≠vel
     jogo->numPlataformas = 5;
     jogo->plataformas = (Plataforma*) malloc(jogo->numPlataformas * sizeof(Plataforma));
     
-    jogo->plataformas[0] = (Plataforma){ { 0, 550, 800, 50 }, DARKGREEN }; // Ch„o inicial
+    jogo->plataformas[0] = (Plataforma){ { 0, 550, 800, 50 }, DARKGREEN }; // Ch√£o inicial
     jogo->plataformas[1] = (Plataforma){ { 300, 420, 200, 20 }, DARKBROWN };
     jogo->plataformas[2] = (Plataforma){ { 100, 300, 180, 20 }, DARKBROWN };
     jogo->plataformas[3] = (Plataforma){ { 500, 180, 180, 20 }, DARKBROWN };
     jogo->plataformas[4] = (Plataforma){ { 250, 60, 180, 20 }, DARKBROWN };
 
-    jogo->yUltimaPlat = 60.0f; // Salva a posiÁ„o Y do topo atual para continuar gerando
+    jogo->yUltimaPlat = 60.0f; // Salva a posi√ß√£o Y do topo atual para continuar gerando
 
     // Cria as primeiras moscas
     jogo->numMoscas = 2;
@@ -173,16 +174,16 @@ void ReiniciarJogo(Jogo *jogo) {
     jogo->moscas[1] = (Mosca){ { 550, 100 }, { -1.5f, 0 }, true, DARKGRAY };
 }
 
-// Gera proceduralmente novas plataformas e moscas ‡ medida que o jogador sobe
+// Gera proceduralmente novas plataformas e moscas √† medida que o jogador sobe
 void GerarMundo(Jogo *jogo) {
-    // Enquanto o topo do mapa gerado estiver prÛximo do topo visÌvel da tela:
+    // Enquanto o topo do mapa gerado estiver pr√≥ximo do topo vis√≠vel da tela:
     while (jogo->yUltimaPlat > jogo->altMax - 800.0f) {
-        float dy = (float)GetRandomValue(130, 180); // Dist‚ncia vertical entre plataformas
+        float dy = (float)GetRandomValue(130, 180); // Dist√¢ncia vertical entre plataformas
         float novoY = jogo->yUltimaPlat - dy;
         float novoX = (float)GetRandomValue(50, 570);
         float largPlat = (float)GetRandomValue(160, 240);
 
-        // Realoca a memÛria do vetor din‚mico para adicionar mais uma plataforma
+        // Realoca a mem√≥ria do vetor din√¢mico para adicionar mais uma plataforma
         jogo->numPlataformas++;
         jogo->plataformas = (Plataforma*) realloc(jogo->plataformas, jogo->numPlataformas * sizeof(Plataforma));
         jogo->plataformas[jogo->numPlataformas - 1] = (Plataforma){ { novoX, novoY, largPlat, 20 }, DARKBROWN };
@@ -195,7 +196,7 @@ void GerarMundo(Jogo *jogo) {
             jogo->moscas = (Mosca*) realloc(jogo->moscas, jogo->numMoscas * sizeof(Mosca));
 
             float velX = (float)GetRandomValue(1, 3);
-            if (GetRandomValue(0, 1) == 0) velX *= -1; // Sorteia a direÁ„o do voo (esquerda ou direita)
+            if (GetRandomValue(0, 1) == 0) velX *= -1; // Sorteia a dire√ß√£o do voo (esquerda ou direita)
 
             jogo->moscas[jogo->numMoscas - 1] = (Mosca){ 
                 { novoX + largPlat / 2.0f - 15.0f, novoY - 40.0f }, 
@@ -207,7 +208,7 @@ void GerarMundo(Jogo *jogo) {
     }
 }
 
-// Processa a fÌsica, movimentaÁ„o, colisıes e estado do jogo a cada quadro
+// Processa a f√≠sica, movimenta√ß√£o, colis√µes e estado do jogo a cada quadro
 void AtualizarJogo(Jogo *jogo) {
     // Se o jogador perdeu, aguarda a tecla 'R' para reiniciar
     if (jogo->estado == ESTADO_GAMEOVER) {
@@ -219,7 +220,7 @@ void AtualizarJogo(Jogo *jogo) {
     const float gravidade = 0.6f;
     const float forcaPulo = -20.0f;
 
-    // --- Entradas do Usu·rio (Teclado) ---
+    // --- Entradas do Usu√°rio (Teclado) ---
     if (IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A)) {
         jogo->sapo.pos.x -= velMovimento;
         jogo->sapo.direcao = DIR_ESQUERDA;
@@ -233,21 +234,21 @@ void AtualizarJogo(Jogo *jogo) {
     if (jogo->sapo.pos.x < -25) jogo->sapo.pos.x = 800;
     if (jogo->sapo.pos.x > 800) jogo->sapo.pos.x = -25;
 
-    // AplicaÁ„o da gravidade e movimentaÁ„o vertical
+    // Aplica√ß√£o da gravidade e movimenta√ß√£o vertical
     jogo->sapo.pos.y += jogo->sapo.vel.y;
     jogo->sapo.vel.y += gravidade;
 
     Rectangle rectSapo = { jogo->sapo.pos.x, jogo->sapo.pos.y, 50, 50 };
     jogo->sapo.noChao = false;
 
-    // --- Colis„o com Plataformas ---
+    // --- Colis√£o com Plataformas ---
     for (int i = 0; i < jogo->numPlataformas; i++) {
-        // Checa colis„o apenas quando o sapo estiver caindo (vel.y >= 0)
+        // Checa colis√£o apenas quando o sapo estiver caindo (vel.y >= 0)
         if (jogo->sapo.vel.y >= 0 && CheckCollisionRecs(rectSapo, jogo->plataformas[i].rect)) {
             float peAnterior = (jogo->sapo.pos.y + 50) - jogo->sapo.vel.y;
-            // Valida se o sapo estava acima da plataforma no quadro anterior (evita colis„o lateral/inferior)
+            // Valida se o sapo estava acima da plataforma no quadro anterior (evita colis√£o lateral/inferior)
             if (peAnterior <= jogo->plataformas[i].rect.y + 20.0f) {
-                jogo->sapo.pos.y = jogo->plataformas[i].rect.y - 50; // Ajusta os pÈs do sapo no topo da plataforma
+                jogo->sapo.pos.y = jogo->plataformas[i].rect.y - 50; // Ajusta os p√©s do sapo no topo da plataforma
                 jogo->sapo.vel.y = 0;
                 jogo->sapo.noChao = true;
                 break;
@@ -255,19 +256,19 @@ void AtualizarJogo(Jogo *jogo) {
         }
     }
 
-    // AÁ„o de Pulo
+    // A√ß√£o de Pulo
     bool pular = IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_UP) || IsKeyDown(KEY_W);
     if (pular && jogo->sapo.noChao) {
         jogo->sapo.vel.y = forcaPulo;
         jogo->sapo.noChao = false;
     }
 
-    // --- Controle da C‚mera e Altura M·xima ---
+    // --- Controle da C√¢mera e Altura M√°xima ---
     if (jogo->sapo.pos.y < jogo->altMax) {
         jogo->altMax = jogo->sapo.pos.y;
     }
     
-    // A c‚mera sÛ sobe se o jogador subir mais alto do que antes (rolagem de tela que n„o volta)
+    // A c√¢mera s√≥ sobe se o jogador subir mais alto do que antes (rolagem de tela que n√£o volta)
     float alvoCamY = jogo->altMax - 300.0f;
     if (alvoCamY < jogo->camY) {
         jogo->camY = alvoCamY;
@@ -276,19 +277,19 @@ void AtualizarJogo(Jogo *jogo) {
     // Gera novos elementos proceduralmente
     GerarMundo(jogo);
 
-    // CondiÁ„o de Game Over: caindo abaixo do limite inferior visÌvel da c‚mera
+    // Condi√ß√£o de Game Over: caindo abaixo do limite inferior vis√≠vel da c√¢mera
     if (jogo->sapo.pos.y > jogo->camY + 650.0f) {
         jogo->estado = ESTADO_GAMEOVER;
         return;
     }
 
-    // --- Movimento e Colis„o das Moscas ---
+    // --- Movimento e Colis√£o das Moscas ---
     for (int i = 0; i < jogo->numMoscas; i++) {
         if (!jogo->moscas[i].ativa) continue;
 
         jogo->moscas[i].pos.x += jogo->moscas[i].vel.x;
 
-        // Inverte a direÁ„o se rebater nas bordas laterais
+        // Inverte a dire√ß√£o se rebater nas bordas laterais
         if (jogo->moscas[i].pos.x <= 20.0f || jogo->moscas[i].pos.x >= 750.0f) {
             jogo->moscas[i].vel.x *= -1;
         }
@@ -305,19 +306,19 @@ void AtualizarJogo(Jogo *jogo) {
 
 // Renderiza todas as camadas visuais do jogo (Fundo, Paralaxe, Elementos do jogo e HUD)
 void DesenharJogo(const Jogo *jogo) {
-    // RenderizaÁ„o da Tela de Game Over
+    // Renderiza√ß√£o da Tela de Game Over
     if (jogo->estado == ESTADO_GAMEOVER) {
         DrawText("GAME OVER!", 280, 250, 40, RED);
         DrawText("Pressione 'R' para reiniciar.", 250, 320, 20, DARKGRAY);
         return;
     }
 
-    // --- 1. CAMADA DE FUNDO (CÈu em Gradiente) ---
+    // --- 1. CAMADA DE FUNDO (C√©u em Gradiente) ---
     DrawRectangleGradientV(0, 0, 800, 600, 
                           (Color){ 100, 180, 240, 255 }, 
                           (Color){ 210, 235, 250, 255 });
 
-    // Desenha o padr„o xadrez sutil no fundo
+    // Desenha o padr√£o xadrez sutil no fundo
     for (int l = 0; l < GRID_LINHAS; l++) {
         for (int c = 0; c < GRID_COLUNAS; c++) {
             if (jogo->bgGrid[l][c] == 1) {
@@ -326,7 +327,7 @@ void DesenharJogo(const Jogo *jogo) {
         }
     }
 
-    // --- 2. CAMADAS DE PARALAXE (Elementos que se movem com velocidades diferentes da c‚mera) ---
+    // --- 2. CAMADAS DE PARALAXE (Elementos que se movem com velocidades diferentes da c√¢mera) ---
     // Sol no fundo
     float solY = 180.0f - jogo->camY * 0.05f;
     DrawCircle(680, (int)solY, 55, (Color){ 255, 250, 200, 180 });
@@ -366,13 +367,13 @@ void DesenharJogo(const Jogo *jogo) {
 
         DrawRectangle(0, (int)lagoaY - 6, 800, 8, (Color){ 195, 160, 105, 255 }); // Margem de areia
 
-        // AnimaÁ„o das ondas do lago com funÁıes trigonomÈtricas (seno)
+        // Anima√ß√£o das ondas do lago com fun√ß√µes trigonom√©tricas (seno)
         float onda = (float)sin(tempo * 2.0) * 10.0f;
         DrawRectangle(60 + (int)onda, (int)lagoaY + 15, 120, 3, (Color){ 255, 255, 255, 120 });
         DrawRectangle(380 - (int)onda, (int)lagoaY + 28, 180, 3, (Color){ 255, 255, 255, 100 });
         DrawRectangle(200 + (int)onda, (int)lagoaY + 50, 90, 3, (Color){ 255, 255, 255, 80 });
 
-        // Plantas aqu·ticas (VitÛrias-rÈgias)
+        // Plantas aqu√°ticas (Vit√≥rias-r√©gias)
         DrawEllipse(140, (int)lagoaY + 35, 38, 12, (Color){ 40, 140, 60, 255 });
         DrawCircle(155, (int)lagoaY + 33, 4, (Color){ 255, 220, 100, 255 });
 
@@ -383,10 +384,10 @@ void DesenharJogo(const Jogo *jogo) {
     // --- 3. DESENHO DAS PLATAFORMAS ---
     for (int i = 0; i < jogo->numPlataformas; i++) {
         Rectangle rectDestino = jogo->plataformas[i].rect;
-        rectDestino.y -= jogo->camY; // Aplica o offset da c‚mera Y para desenhar na posiÁ„o correta na tela
+        rectDestino.y -= jogo->camY; // Aplica o offset da c√¢mera Y para desenhar na posi√ß√£o correta na tela
 
         if (i == 0) {
-            // Desenho estilizado da plataforma inicial (ch„o)
+            // Desenho estilizado da plataforma inicial (ch√£o)
             DrawRectangleRec(rectDestino, (Color){ 45, 150, 65, 255 });
             DrawRectangle(rectDestino.x, rectDestino.y + 12, rectDestino.width, rectDestino.height - 12, (Color){ 110, 70, 45, 255 });
             DrawRectangle(rectDestino.x, rectDestino.y + 10, rectDestino.width, 3, (Color){ 30, 110, 45, 255 });
@@ -416,7 +417,7 @@ void DesenharJogo(const Jogo *jogo) {
     }
 
     // --- 5. DESENHO DO JOGADOR (SAPO) ---
-    // Sombra projetada nos pÈs quando estiver no ch„o
+    // Sombra projetada nos p√©s quando estiver no ch√£o
     if (jogo->sapo.noChao) {
         DrawEllipse(jogo->sapo.pos.x + 25, (jogo->sapo.pos.y - jogo->camY) + 47, 18, 5, (Color){ 0, 0, 0, 80 });
     }
@@ -433,31 +434,31 @@ void DesenharJogo(const Jogo *jogo) {
 
     DrawTexturePro(jogo->texSapo, rectOrigemSapo, rectDestinoSapo, (Vector2){ 25.0f, 25.0f }, 0.0f, WHITE);
 
-    // --- 6. CAMADA DA INTERFACE DE USU¡RIO (HUD) ---
-    // Painel transl˙cido do placar no canto superior esquerdo
+    // --- 6. CAMADA DA INTERFACE DE USU√ÅRIO (HUD) ---
+    // Painel transl√∫cido do placar no canto superior esquerdo
     DrawRectangle(10, 10, 280, 55, (Color){ 0, 0, 0, 120 });
     DrawRectangleLines(10, 10, 280, 55, (Color){ 255, 255, 255, 80 });
 
     DrawText(jogo->msgStatus, 20, 16, 18, WHITE);
     
-    // C·lculo e exibiÁ„o da pontuaÁ„o por altura alcanÁada
+    // C√°lculo e exibi√ß√£o da pontua√ß√£o por altura alcan√ßada
     char txtAltura[50];
     snprintf(txtAltura, sizeof(txtAltura), "Altura: %.0fm", (400.0f - jogo->altMax) / 10.0f);
     DrawText(txtAltura, 20, 38, 16, GREEN);
 
-    // Dica de controles no rodapÈ
+    // Dica de controles no rodap√©
     DrawText("Controles: A/D ou Setas (Mover), Espaco/W (Pular)", 12, 578, 15, WHITE);
 }
 
-// Libera os recursos gr·ficos e a memÛria heap alocada antes de fechar o jogo
+// Libera os recursos gr√°ficos e a mem√≥ria heap alocada antes de fechar o jogo
 void DestruirJogo(Jogo *jogo) {
     if (jogo == NULL) return;
 
-    // Descarrega as texturas da placa de vÌdeo
+    // Descarrega as texturas da placa de v√≠deo
     UnloadTexture(jogo->texSapo);
     UnloadTexture(jogo->texMosca);
 
-    // Libera a memÛria dos vetores din‚micos
+    // Libera a mem√≥ria dos vetores din√¢micos
     if (jogo->plataformas != NULL) free(jogo->plataformas);
     if (jogo->moscas != NULL) free(jogo->moscas);
 
