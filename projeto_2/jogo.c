@@ -1,3 +1,4 @@
+//Integrantes do projeto: Marcos Vinicius Aires de Medeiros, José Bernardo da Silva
 #include "raylib.h"
 #include "stdio.h" 
 #include "stdlib.h"
@@ -73,6 +74,11 @@ typedef struct {
     
     Texture2D texMosca[5];
 
+    Music musicaMenu;
+    Music musicaJogo;
+    Music musicaGameover;
+    EstadoJogo estadoMusicaAtual;
+
     float camY;          
     float camX;
     float altMax;   
@@ -98,18 +104,21 @@ void SalvarPontuacao(Jogo *jogo);
 void CarregarPontuacoes(Jogo *jogo);
 void OrdenarScores(Jogo *jogo);
 int BuscarScore(Jogo *jogo, int valor);
+void AtualizarMusicas(Jogo *jogo);
 
 int main(void) {
     const int larguraTela = 800;
     const int alturaTela = 600;
 
-    InitWindow(larguraTela, alturaTela, "Jogo do Sapo - Subida Infinita");
+    InitWindow(larguraTela, alturaTela, "Jornada de Peppo");
+    InitAudioDevice(); 
     SetTargetFPS(60);
 
     Jogo *jogo = CriarJogo(larguraTela, alturaTela);
 
     while (!WindowShouldClose()) {
         AtualizarJogo(jogo);
+        AtualizarMusicas(jogo);
 
         BeginDrawing();
         ClearBackground(RAYWHITE);
@@ -118,6 +127,7 @@ int main(void) {
     }
 
     DestruirJogo(jogo);
+    CloseAudioDevice(); 
     CloseWindow();
 
     return 0;
@@ -136,7 +146,21 @@ Jogo* CriarJogo(int largura, int altura) {
     jogo->texMosca[2] = LoadTexture("assets/sprites/mosca_bater_asas2.png");
     jogo->texMosca[3] = LoadTexture("assets/sprites/mosca_bater_asas3.png");
     jogo->texMosca[4] = LoadTexture("assets/sprites/mosca_bater_asas4.png");
-    
+
+    jogo->musicaMenu = LoadMusicStream("assets/sound/Menu.ogg");
+    jogo->musicaJogo = LoadMusicStream("assets/sound/gameplay.ogg");
+    jogo->musicaGameover = LoadMusicStream("assets/sound/Gameover.ogg");
+
+    SetMusicVolume(jogo->musicaMenu, 0.5f);
+    SetMusicVolume(jogo->musicaJogo, 0.5f);
+    SetMusicVolume(jogo->musicaGameover, 0.5f);
+
+    jogo->musicaMenu.looping = true;
+    jogo->musicaJogo.looping = true;
+    jogo->musicaGameover.looping = false; 
+
+    jogo->estadoMusicaAtual = (EstadoJogo)-1;
+
     jogo->moscas = NULL;
     jogo->plataformas = NULL;
 
@@ -151,6 +175,38 @@ Jogo* CriarJogo(int largura, int altura) {
     CarregarPontuacoes(jogo);
 
     return jogo;
+}
+
+void AtualizarMusicas(Jogo *jogo) {
+    EstadoJogo estadoAlvoMusica = jogo->estado;
+
+    if (estadoAlvoMusica == ESTADO_RANKING) {
+        estadoAlvoMusica = ESTADO_MENU;
+    }
+
+    if (jogo->estadoMusicaAtual != estadoAlvoMusica) {
+        StopMusicStream(jogo->musicaMenu);
+        StopMusicStream(jogo->musicaJogo);
+        StopMusicStream(jogo->musicaGameover);
+
+        if (estadoAlvoMusica == ESTADO_MENU) {
+            PlayMusicStream(jogo->musicaMenu);
+        } else if (estadoAlvoMusica == ESTADO_VERTICAL || estadoAlvoMusica == ESTADO_HORIZONTAL) {
+            PlayMusicStream(jogo->musicaJogo);
+        } else if (estadoAlvoMusica == ESTADO_GAMEOVER) {
+            PlayMusicStream(jogo->musicaGameover);
+        }
+
+        jogo->estadoMusicaAtual = estadoAlvoMusica;
+    }
+
+    if (jogo->estadoMusicaAtual == ESTADO_MENU) {
+        UpdateMusicStream(jogo->musicaMenu);
+    } else if (jogo->estadoMusicaAtual == ESTADO_VERTICAL || jogo->estadoMusicaAtual == ESTADO_HORIZONTAL) {
+        UpdateMusicStream(jogo->musicaJogo);
+    } else if (jogo->estadoMusicaAtual == ESTADO_GAMEOVER) {
+        UpdateMusicStream(jogo->musicaGameover);
+    }
 }
 
 void ReiniciarJogo(Jogo *jogo, EstadoJogo novoEstado) {
@@ -215,12 +271,26 @@ void ReiniciarJogo(Jogo *jogo, EstadoJogo novoEstado) {
 }
 
 void SalvarPontuacao(Jogo *jogo) {
-    FILE *f = fopen("pontuacoes.dat", "ab");
+    CarregarPontuacoes(jogo);
+    if (jogo->numScores < 10) {
+        jogo->scores[jogo->numScores++] = jogo->sapo.pontos;
+    } else {
+        int menorIdx = 0;
+        for (int i = 1; i < jogo->numScores; i++) {
+            if (jogo->scores[i] < jogo->scores[menorIdx]) {
+                menorIdx = i;
+            }
+        }
+        if (jogo->sapo.pontos > jogo->scores[menorIdx]) {
+            jogo->scores[menorIdx] = jogo->sapo.pontos;
+        }
+    }
+    OrdenarScores(jogo);
+    FILE *f = fopen("pontuacoes.dat", "wb");
     if (f != NULL) {
-        fwrite(&jogo->sapo.pontos, sizeof(int), 1, f);
+        fwrite(jogo->scores, sizeof(int), jogo->numScores, f);
         fclose(f);
     }
-    CarregarPontuacoes(jogo);
 }
 
 void CarregarPontuacoes(Jogo *jogo) {
@@ -326,6 +396,7 @@ void AtualizarJogo(Jogo *jogo) {
         if (IsKeyPressed(KEY_ONE)) ReiniciarJogo(jogo, ESTADO_VERTICAL);
         if (IsKeyPressed(KEY_TWO)) ReiniciarJogo(jogo, ESTADO_HORIZONTAL);
         if (IsKeyPressed(KEY_THREE)) {
+            CarregarPontuacoes(jogo);
             OrdenarScores(jogo);
             jogo->estado = ESTADO_RANKING;
         }
@@ -464,10 +535,16 @@ void AtualizarJogo(Jogo *jogo) {
 
 void DesenharJogo(const Jogo *jogo) {
     if (jogo->estado == ESTADO_MENU) {
-        DrawText("JOGO DO SAPO", 260, 150, 40, DARKGREEN);
-        DrawText("1. Modo Vertical (Subida Infinita)", 230, 250, 20, DARKGRAY);
-        DrawText("2. Modo Horizontal (Aventura)", 230, 290, 20, DARKGRAY);
-        DrawText("3. Ver Ranking (Ordenado / Arquivo)", 230, 330, 20, DARKGRAY);
+        DrawRectangleGradientV(0, 0, 800, 600, (Color){ 70, 130, 180, 255 }, (Color){ 30, 60, 90, 255 });
+        DrawCircle(400, 150, 60, (Color){ 255, 255, 255, 20 });
+        DrawText("Jornada de Peppo", 212, 132, 45, (Color){ 0, 0, 0, 100 });
+        DrawText("Jornada de Peppo", 210, 130, 45, (Color){ 140, 255, 140, 255 });
+        DrawRectangle(180, 230, 440, 230, (Color){ 0, 0, 0, 100 });
+        DrawRectangleLines(180, 230, 440, 230, (Color){ 100, 200, 100, 200 });
+        DrawText("[1] Modo Infinito", 210, 260, 20, RAYWHITE);
+        DrawText("[2] Modo Aventura", 210, 310, 20, RAYWHITE);
+        DrawText("[3] Ver Ranking de Pontuacoes", 210, 360, 20, RAYWHITE);
+        DrawText("Pressione o numero correspondente para jogar", 205, 420, 14, LIGHTGRAY);
         return;
     }
 
@@ -631,10 +708,14 @@ void DestruirJogo(Jogo *jogo) {
     UnloadTexture(jogo->texSapoPuloInicial);
     UnloadTexture(jogo->texSapoNoAr);
     UnloadTexture(jogo->texSapoMorto);
- 
+    
     for (int i = 0; i < 5; i++) {
         UnloadTexture(jogo->texMosca[i]);
     }
+
+    UnloadMusicStream(jogo->musicaMenu);
+    UnloadMusicStream(jogo->musicaJogo);
+    UnloadMusicStream(jogo->musicaGameover);
 
     if (jogo->plataformas != NULL) free(jogo->plataformas);
     if (jogo->moscas != NULL) free(jogo->moscas);
