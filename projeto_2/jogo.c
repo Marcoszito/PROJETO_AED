@@ -1,4 +1,4 @@
-//Integrantes do projeto: Marcos Vinicius Aires de Medeiros, José Bernardo da Silva
+//Integrantes do projeto: Marcos Vinicius Aires de Medeiros, JosÃ© Bernardo da Silva
 #include "raylib.h"
 #include "stdio.h" 
 #include "stdlib.h"
